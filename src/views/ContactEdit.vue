@@ -1,93 +1,70 @@
 <template>
-  <div class="container mt-4">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <h3>Chỉnh sửa liên hệ</h3>
-        <form @submit.prevent="updateContact">
-          <div class="form-group">
-            <label>Họ tên</label>
-            <input
-              v-model="contact.name"
-              type="text"
-              class="form-control"
-              placeholder="Nhập họ tên"
-              required
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Email</label>
-            <input
-              v-model="contact.email"
-              type="email"
-              class="form-control"
-              placeholder="Nhập email"
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Địa chỉ</label>
-            <input
-              v-model="contact.address"
-              type="text"
-              class="form-control"
-              placeholder="Nhập địa chỉ"
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Số điện thoại</label>
-            <input
-              v-model="contact.phone"
-              type="text"
-              class="form-control"
-              placeholder="Nhập số điện thoại"
-            />
-          </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-primary mr-2">Cập nhật</button>
-            <router-link to="/" class="btn btn-secondary">Hủy</router-link>
-          </div>
-        </form>
-        <div v-if="message" class="alert alert-info mt-3">{{ message }}</div>
-      </div>
-    </div>
+  <div v-if="contact" class="page">
+    <h4>Hiệu chỉnh Liên hệ</h4>
+    <ContactForm
+      :contact="contact"
+      @submit:contact="updateContact"
+      @delete:contact="deleteContact"
+    />
+    <p>{{ message }}</p>
   </div>
 </template>
 
 <script>
+import ContactForm from "@/components/ContactForm.vue";
 import ContactService from "@/services/contact.service";
 
 export default {
-  name: "ContactEdit",
+  components: {
+    ContactForm,
+  },
+  props: {
+    id: { type: String, required: true },
+  },
   data() {
     return {
-      contact: {
-        name: "",
-        email: "",
-        address: "",
-        phone: "",
-      },
+      contact: null,
       message: "",
     };
   },
-  async created() {
-    const id = this.$route.params.id;
-    try {
-      const response = await ContactService.get(id);
-      this.contact = response.data;
-    } catch (error) {
-      this.message = "Không tìm thấy liên hệ.";
-    }
-  },
   methods: {
-    async updateContact() {
-      const id = this.$route.params.id;
+    async getContact(id) {
       try {
-        await ContactService.update(id, this.contact);
-        this.message = "Cập nhật thành công!";
-        this.$router.push("/");
+        this.contact = await ContactService.get(id);
       } catch (error) {
-        this.message = "Có lỗi xảy ra: " + error.message;
+        console.log(error);
+        this.$router.push({
+          name: "notfound",
+          params: {
+            pathMatch: this.$route.path.split("/").slice(1),
+          },
+          query: this.$route.query,
+          hash: this.$route.hash,
+        });
       }
     },
+    async updateContact(data) {
+      try {
+        await ContactService.update(this.contact._id, data);
+        this.message = "Liên hệ được cập nhật thành công.";
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async deleteContact() {
+      if (confirm("Bạn muốn xóa Liên hệ này?")) {
+        try {
+          await ContactService.delete(this.contact._id);
+          this.$router.push({ name: "contactbook" });
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    },
+  },
+  created() {
+    this.getContact(this.id);
+    this.message = "";
   },
 };
 </script>

@@ -1,62 +1,22 @@
 <template>
-  <div class="container mt-4">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <h3>Thêm liên hệ mới</h3>
-        <form @submit.prevent="submitContact">
-          <div class="form-group">
-            <label>Họ tên</label>
-            <input
-              v-model="contact.name"
-              type="text"
-              class="form-control"
-              placeholder="Nhập họ tên"
-              required
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Email</label>
-            <input
-              v-model="contact.email"
-              type="email"
-              class="form-control"
-              placeholder="Nhập email"
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Địa chỉ</label>
-            <input
-              v-model="contact.address"
-              type="text"
-              class="form-control"
-              placeholder="Nhập địa chỉ"
-            />
-          </div>
-          <div class="form-group mt-2">
-            <label>Số điện thoại</label>
-            <input
-              v-model="contact.phone"
-              type="text"
-              class="form-control"
-              placeholder="Nhập số điện thoại"
-            />
-          </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-success mr-2">Lưu</button>
-            <router-link to="/" class="btn btn-secondary">Hủy</router-link>
-          </div>
-        </form>
-        <div v-if="message" class="alert alert-info mt-3">{{ message }}</div>
-      </div>
-    </div>
+  <div class="page">
+    <h4>Thêm Liên hệ mới</h4>
+    <ContactForm
+      :contact="contact"
+      @submit:contact="createContact"
+    />
+    <p>{{ message }}</p>
   </div>
 </template>
 
 <script>
+import ContactForm from "@/components/ContactForm.vue";
 import ContactService from "@/services/contact.service";
 
 export default {
-  name: "ContactAdd",
+  components: {
+    ContactForm,
+  },
   data() {
     return {
       contact: {
@@ -64,18 +24,18 @@ export default {
         email: "",
         address: "",
         phone: "",
+        favorite: false,
       },
       message: "",
     };
   },
   methods: {
-    async submitContact() {
+    async createContact(data) {
       try {
-        await ContactService.create(this.contact);
-        this.message = "Thêm liên hệ thành công!";
-        this.$router.push("/");
+        await ContactService.create(data);
+        this.message = "Liên hệ được thêm mới thành công.";
       } catch (error) {
-        this.message = "Có lỗi xảy ra: " + error.message;
+        console.log(error);
       }
     },
   },
